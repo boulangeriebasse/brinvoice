@@ -65,7 +65,14 @@
         }
     </style>
 </head>
-<body class="text-gray-800 antialiased">
+<body class="text-gray-800 antialiased relative">
+
+    <!-- 全面ローディングオーバーレイ (生成中のチラつき隠し＆待機画面) -->
+    <div id="pdf-loading" class="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center hidden">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-gray-900 border-r-transparent mb-4"></div>
+        <p class="text-xl font-bold text-gray-800">PDFを生成しています...</p>
+        <p class="text-sm text-gray-500 mt-2">画面をそのままにしてお待ちください</p>
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 py-8">
         
@@ -481,10 +488,13 @@
         // PDFの生成処理
         function generatePDF() {
             const preview = document.getElementById('invoice-preview');
+            const loading = document.getElementById('pdf-loading');
             
+            // ローディング画面を表示
+            loading.classList.remove('hidden');
+
             const invNumber = document.getElementById('preview-invoiceNumber').textContent;
             const bandName = document.getElementById('bandName').value || '未名称';
-            // ファイル名から不要な文字を除外
             const safeBandName = bandName.replace(/[\\/:*?"<>|]/g, '');
             
             const opt = {
@@ -494,44 +504,50 @@
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    scrollY: 0, 
-                    scrollX: 0,
-                    windowWidth: 794,
-                    // ★ ここが超重要：画面はチラつかせず、裏側で作られるクローンにだけ処理を行う
+                    // キャプチャのズレを完全に防ぐための厳密な設定
+                    windowWidth: 794, 
+                    windowHeight: 1123,
+                    x: 0,
+                    y: 0,
                     onclone: function(clonedDoc) {
+                        // 画面表示は一切いじらず、裏側で作られるクローン文書内でのみレイアウトを強制する
                         const el = clonedDoc.getElementById('invoice-preview');
                         if (el) {
-                            // 1. スケールや影を解除して原寸大に戻す
+                            // 縮小や親要素の影響をすべて解除し、A4実寸大で左上に固定
                             el.style.transform = 'none';
                             el.classList.remove('shadow-lg');
-                            
-                            // 2. 親要素の影響（中央寄せなど）でズレるのを完全に防ぐため、強制的に絶対座標の左上に配置
+                            el.style.width = '794px';
+                            el.style.height = '1123px';
                             el.style.position = 'absolute';
                             el.style.top = '0';
                             el.style.left = '0';
                             el.style.margin = '0';
                             
-                            // 3. 余計な余白などを巻き込まないよう、bodyの中身をこれ一つだけにする
+                            // 余計な余白などを巻き込まないよう、クローン文書の中身をこれ一つだけにする
                             clonedDoc.body.innerHTML = '';
                             clonedDoc.body.style.margin = '0';
                             clonedDoc.body.style.padding = '0';
-                            clonedDoc.body.style.background = 'white';
                             clonedDoc.body.appendChild(el);
                         }
                     }
                 },
                 jsPDF: { 
                     unit: 'px',          
-                    format: [794, 1123], // A4実サイズ（2ページ目を防ぐ）
+                    format: [794, 1123], // A4実サイズ固定（2ページ目防止）
                     orientation: 'portrait' 
                 }
             };
             
-            // 画面を動かさずに直接PDF化
-            html2pdf().set(opt).from(preview).save().catch(err => {
-                console.error("PDF生成エラー:", err);
-                alert("PDFの生成に失敗しました。");
-            });
+            // Promiseを使用して、エラー時も確実にローディングを消す
+            html2pdf().set(opt).from(preview).save()
+                .then(() => {
+                    loading.classList.add('hidden');
+                })
+                .catch(err => {
+                    console.error("PDF生成エラー:", err);
+                    alert("PDFの生成に失敗しました。ブラウザを更新して再度お試しください。");
+                    loading.classList.add('hidden');
+                });
         }
 
         // リセット機能
