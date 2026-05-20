@@ -478,18 +478,7 @@
 
         // PDFの生成処理
         function generatePDF() {
-            const originalPreview = document.getElementById('invoice-preview');
-            
-            // PDFキャプチャの不具合（真っ白になる等）を防ぐため、クローンを作成して画面外で処理する
-            const clone = originalPreview.cloneNode(true);
-            
-            // クローンを画面外に配置し、スケールや影をリセット
-            clone.style.position = 'absolute';
-            clone.style.left = '-9999px';
-            clone.style.top = '0';
-            clone.style.transform = 'none';
-            clone.classList.remove('shadow-lg');
-            document.body.appendChild(clone);
+            const preview = document.getElementById('invoice-preview');
             
             const invNumber = document.getElementById('preview-invoiceNumber').textContent;
             const bandName = document.getElementById('bandName').value || '未名称';
@@ -503,22 +492,27 @@
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    scrollY: 0 // スクロール位置によるキャプチャズレを防止
+                    scrollY: 0, // スクロール位置によるズレを防止
+                    windowWidth: 794, // A4幅を明示
+                    // PDF生成の裏側で作成されるクローン要素に対する処理（画面のチラつきなし）
+                    onclone: function(clonedDoc) {
+                        const el = clonedDoc.getElementById('invoice-preview');
+                        if (el) {
+                            // スケールや影を解除して原寸大でキャプチャさせる
+                            el.style.transform = 'none';
+                            el.style.width = '794px';
+                            el.style.minHeight = '1123px';
+                            el.classList.remove('shadow-lg');
+                        }
+                    }
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // クローン要素からPDFを生成
-            html2pdf().set(opt).from(clone).save().then(() => {
-                // 完了後にクローンを削除
-                document.body.removeChild(clone);
-            }).catch(err => {
+            // プレビュー要素から直接PDFを生成
+            html2pdf().set(opt).from(preview).save().catch(err => {
                 console.error("PDF生成エラー:", err);
                 alert("PDFの生成に失敗しました。");
-                // エラー時もクローンを削除
-                if (document.body.contains(clone)) {
-                    document.body.removeChild(clone);
-                }
             });
         }
 
