@@ -480,17 +480,8 @@
 
         // PDFの生成処理
         function generatePDF() {
-            const wrapper = document.getElementById('preview-wrapper');
             const preview = document.getElementById('invoice-preview');
             
-            // ★ PDF生成前に、一時的にスケールを原寸大（100%）に戻す
-            const originalTransform = preview.style.transform;
-            const originalWrapperHeight = wrapper.style.height;
-            
-            preview.style.transform = 'none';
-            wrapper.style.height = '1123px';
-            preview.classList.remove('shadow-lg'); // 影も消す
-
             const invNumber = document.getElementById('preview-invoiceNumber').textContent;
             const bandName = document.getElementById('bandName').value || '未名称';
             // ファイル名から不要な文字を除外
@@ -504,31 +495,43 @@
                     scale: 2, 
                     useCORS: true, 
                     scrollY: 0, 
-                    windowWidth: 794 // 幅を強制固定してレイアウト崩れを防ぐ
+                    scrollX: 0,
+                    windowWidth: 794,
+                    // ★ ここが超重要：画面はチラつかせず、裏側で作られるクローンにだけ処理を行う
+                    onclone: function(clonedDoc) {
+                        const el = clonedDoc.getElementById('invoice-preview');
+                        if (el) {
+                            // 1. スケールや影を解除して原寸大に戻す
+                            el.style.transform = 'none';
+                            el.classList.remove('shadow-lg');
+                            
+                            // 2. 親要素の影響（中央寄せなど）でズレるのを完全に防ぐため、強制的に絶対座標の左上に配置
+                            el.style.position = 'absolute';
+                            el.style.top = '0';
+                            el.style.left = '0';
+                            el.style.margin = '0';
+                            
+                            // 3. 余計な余白などを巻き込まないよう、bodyの中身をこれ一つだけにする
+                            clonedDoc.body.innerHTML = '';
+                            clonedDoc.body.style.margin = '0';
+                            clonedDoc.body.style.padding = '0';
+                            clonedDoc.body.style.background = 'white';
+                            clonedDoc.body.appendChild(el);
+                        }
+                    }
                 },
                 jsPDF: { 
-                    unit: 'px',          // 単位をピクセルに
-                    format: [794, 1123], // A4の実サイズに完全固定（2ページ目を防ぐ）
+                    unit: 'px',          
+                    format: [794, 1123], // A4実サイズ（2ページ目を防ぐ）
                     orientation: 'portrait' 
                 }
             };
             
-            // ★ スタイルの変更がブラウザに反映されるのを一瞬だけ待ってからPDF化
-            setTimeout(() => {
-                html2pdf().set(opt).from(preview).save().then(() => {
-                    // 完了後に元のスケール状態に戻す
-                    preview.style.transform = originalTransform;
-                    wrapper.style.height = originalWrapperHeight;
-                    preview.classList.add('shadow-lg');
-                }).catch(err => {
-                    console.error("PDF生成エラー:", err);
-                    alert("PDFの生成に失敗しました。");
-                    // エラー時も元に戻す
-                    preview.style.transform = originalTransform;
-                    wrapper.style.height = originalWrapperHeight;
-                    preview.classList.add('shadow-lg');
-                });
-            }, 100);
+            // 画面を動かさずに直接PDF化
+            html2pdf().set(opt).from(preview).save().catch(err => {
+                console.error("PDF生成エラー:", err);
+                alert("PDFの生成に失敗しました。");
+            });
         }
 
         // リセット機能
