@@ -8,8 +8,9 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- html2pdf.js (PDF出力用ライブラリ) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- html2canvas + jsPDF (PDF出力用ライブラリ) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <!-- Google Fonts (明朝体) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
@@ -65,10 +66,10 @@
         }
     </style>
 </head>
-<body class="text-gray-800 antialiased relative">
+<body class="text-gray-800 antialiased">
 
     <!-- 全面ローディングオーバーレイ -->
-    <div id="pdf-loading" class="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center hidden">
+    <div id="pdf-loading" class="fixed inset-0 bg-white z-[10000] flex flex-col items-center justify-center hidden">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-gray-900 border-r-transparent mb-4"></div>
         <p class="text-xl font-bold text-gray-800">PDFを生成しています...</p>
         <p class="text-sm text-gray-500 mt-2">画面をそのままにしてお待ちください</p>
@@ -108,32 +109,32 @@
                         </p>
                     </div>
 
-                    <!-- 請求元情報 (テストデータ入り) -->
+                    <!-- 請求元情報 -->
                     <section>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-800">請求元情報</h3>
                         <div class="grid grid-cols-1 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">アーティスト名 / 会社名 <span class="text-red-500">*</span></label>
-                                <input type="text" id="bandName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="銀幕一楼">
+                                <input type="text" id="bandName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">住所 <span class="text-red-500">*</span></label>
-                                <input type="text" id="address" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="東京都新宿区テスト1-2-3">
+                                <input type="text" id="address" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">担当者名 <span class="text-red-500">*</span></label>
-                                    <input type="text" id="contactName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="松永 健太">
+                                    <input type="text" id="contactName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">電話番号 <span class="text-red-500">*</span></label>
-                                    <input type="tel" id="phone" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="090-1234-5678">
+                                    <input type="tel" id="phone" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス (任意)</label>
-                                    <input type="email" id="email" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="test@example.com">
+                                    <input type="email" id="email" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">インボイス登録番号 (任意)</label>
@@ -141,14 +142,14 @@
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <span class="text-gray-500 font-medium">T</span>
                                         </div>
-                                        <input type="text" id="invoiceRegNum" class="sync-input block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" maxlength="13" value="1234567890123">
+                                        <input type="text" id="invoiceRegNum" class="sync-input block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" maxlength="13">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    <!-- 請求内容 (テストデータ入り) -->
+                    <!-- 請求内容 -->
                     <section>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-800">請求内容</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -162,7 +163,7 @@
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <span class="text-gray-500 font-medium">¥</span>
                                     </div>
-                                    <input type="number" id="amount" class="sync-input block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="10000">
+                                    <input type="number" id="amount" class="sync-input block w-full pl-8 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                                 </div>
                             </div>
                             <div class="sm:col-span-2">
@@ -172,17 +173,17 @@
                         </div>
                     </section>
 
-                    <!-- 振込先情報 (テストデータ入り) -->
+                    <!-- 振込先情報 -->
                     <section>
                         <h3 class="text-lg font-semibold border-b pb-2 mb-4 text-gray-800">振込先</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">銀行名 <span class="text-red-500">*</span></label>
-                                <input type="text" id="bankName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="三井住友">
+                                <input type="text" id="bankName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">支店名 <span class="text-red-500">*</span></label>
-                                <input type="text" id="branchName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="新宿">
+                                <input type="text" id="branchName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">口座種別 <span class="text-red-500">*</span></label>
@@ -193,11 +194,11 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">口座番号 <span class="text-red-500">*</span></label>
-                                <input type="text" id="accountNumber" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="1234567">
+                                <input type="text" id="accountNumber" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                             </div>
                             <div class="sm:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">口座名義 (カナ) <span class="text-red-500">*</span></label>
-                                <input type="text" id="accountName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors" value="カ）ギンマクイチロウ">
+                                <input type="text" id="accountName" class="sync-input block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 transition-colors">
                             </div>
                         </div>
                     </section>
@@ -228,7 +229,7 @@
                     <div id="preview-wrapper" class="bg-gray-300/50 p-2 sm:p-4 rounded-xl shadow-inner">
                         
                         <!-- PDF出力対象要素 (A4比率) -->
-                        <div id="invoice-preview" class="p-14 text-black shadow-lg serif-font">
+                        <div id="invoice-preview" class="p-14 text-black shadow-lg serif-font bg-white">
                             
                             <!-- 1段目: タイトルと日付 -->
                             <div class="flex justify-between items-end mb-16">
@@ -323,7 +324,7 @@
     <script>
         // --- 1. 初期設定・ユーティリティ ---
 
-        // ランダムな請求書番号を生成 (INV-YYYYMMDD-XXXXXX)
+        // ランダムな請求書番号を生成
         function generateInvoiceNumber() {
             const date = new Date();
             const yyyy = date.getFullYear();
@@ -346,53 +347,32 @@
             return num.toLocaleString('ja-JP');
         }
 
-        // プレースホルダーの取得（未入力時の表示用）
         function getPlaceholder(id) {
             const placeholders = {
-                bandName: '',
-                address: '',
-                contactName: '',
-                email: '',
-                phone: '',
-                details: 'BAGLE ROCK!!2026出演料',
-                bankName: '',
-                branchName: '',
-                accountNumber: '',
-                accountName: ''
+                bandName: '', address: '', contactName: '', email: '', phone: '',
+                details: 'BAGLE ROCK!!2026出演料', bankName: '', branchName: '',
+                accountNumber: '', accountName: ''
             };
             return placeholders[id] || '';
         }
 
-        // --- 2. プレビューのレスポンシブスケーリング処理 ---
-        
+
+        // --- 2. 画面用プレビューの縮尺調整 ---
         function scalePreview() {
             const wrapper = document.getElementById('preview-wrapper');
             const preview = document.getElementById('invoice-preview');
-            
             if (!wrapper || !preview) return;
-
-            // wrapperの現在の幅を取得
-            const wrapperWidth = wrapper.clientWidth;
-            // プレビューの本来の幅 (CSSで 794px に固定)
             const targetWidth = 794; 
-            
-            // スケール計算 (パディングの余裕をもたせる)
-            let scale = (wrapperWidth - 32) / targetWidth;
-            if (scale > 1) scale = 1; // 1倍以上に拡大はしない
-            
-            // transformを適用
+            let scale = (wrapper.clientWidth - 32) / targetWidth;
+            if (scale > 1) scale = 1;
             preview.style.transform = `scale(${scale})`;
-            
-            // 親要素の高さをスケール後のプレビューの高さに合わせる
-            const scaledHeight = preview.offsetHeight * scale;
-            wrapper.style.height = `${scaledHeight + 32}px`;
+            wrapper.style.height = `${preview.offsetHeight * scale + 32}px`;
         }
 
-
-        // --- 3. イベントリスナーの設定 ---
-
+        // --- 3. アプリ初期化 ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 初期日付の設定
+            
+            // --- 初期値の設定 ---
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -402,73 +382,59 @@
             const dateInput = document.getElementById('invoiceDate');
             dateInput.value = todayStr;
             document.getElementById('preview-invoiceDate').textContent = todayStr.replace(/-/g, '/');
-            
-            // 請求書番号の初期設定
             document.getElementById('preview-invoiceNumber').textContent = generateInvoiceNumber();
             
-            // 画面リサイズ時にプレビューの縮尺を再計算
             window.addEventListener('resize', scalePreview);
-            
-            // 初期スケール適用
-            // 少し遅延させてレイアウト確定後に計算させる
             setTimeout(scalePreview, 50);
 
-            // 日付変更時の連動
+            // --- 入力値のリアルタイム同期 ---
             dateInput.addEventListener('change', (e) => {
                 document.getElementById('preview-invoiceDate').textContent = e.target.value.replace(/-/g, '/');
             });
 
-            // フォーム入力のリアルタイム反映設定
             const inputs = document.querySelectorAll('.sync-input');
             inputs.forEach(input => {
                 input.addEventListener('input', (e) => {
                     const id = e.target.id;
-                    const previewId = 'preview-' + id;
-                    const previewElement = document.getElementById(previewId);
+                    const previewEl = document.getElementById('preview-' + id);
                     
-                    if (previewElement) {
+                    if (previewEl) {
                         if (id === 'amount') {
                             const formatted = formatCurrency(e.target.value);
-                            previewElement.textContent = formatted;
+                            previewEl.textContent = formatted;
                             document.getElementById('preview-amount-detail').textContent = formatted;
                         } else if (id === 'invoiceRegNum') {
                             const wrapper = document.getElementById('preview-invoiceRegNum-wrapper');
                             if (e.target.value.trim() !== '') {
                                 wrapper.classList.remove('hidden');
-                                previewElement.textContent = e.target.value;
+                                previewEl.textContent = e.target.value;
                             } else {
                                 wrapper.classList.add('hidden');
-                                previewElement.textContent = '';
+                                previewEl.textContent = '';
                             }
                         } else {
-                            // 改行を許容する場合の処理（テキストエリアを使う場合など）
-                            previewElement.textContent = e.target.value || getPlaceholder(id);
+                            previewEl.textContent = e.target.value || getPlaceholder(id);
                         }
                     }
                     
-                    // エラー状態の解除（入力されたら赤枠を消す）
                     if (e.target.value) {
                         e.target.classList.remove('border-red-500', 'bg-red-50');
                     }
                 });
             });
 
-            // ★追加：テストデータとして設定した初期値をプレビューに即時反映させる
+            // テストデータを強制的にプレビューへ反映
             inputs.forEach(input => {
-                const event = new Event('input');
-                input.dispatchEvent(event);
+                input.dispatchEvent(new Event('input'));
             });
         });
 
 
-        // --- 4. アクション機能 ---
+        // --- 4. PDF出力機能 ---
 
-        // バリデーションとPDF保存
         function validateAndSavePDF() {
-            // メールアドレス(email)と内訳(details)を必須項目から除外
             const requiredIds = ['bandName', 'address', 'contactName', 'phone', 'invoiceDate', 'amount', 'bankName', 'branchName', 'accountNumber', 'accountName'];
             let isValid = true;
-            
             for (let id of requiredIds) {
                 const el = document.getElementById(id);
                 if (!el.value) {
@@ -478,122 +444,89 @@
                     el.classList.remove('border-red-500', 'bg-red-50');
                 }
             }
-            
             const errorMsg = document.getElementById('error-message');
             if (!isValid) {
                 errorMsg.classList.remove('hidden');
-                // スマホなど向けに上部へスクロール
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
-            
             errorMsg.classList.add('hidden');
             generatePDF();
         }
 
-        // PDFの生成処理 (完全に安全な処理に刷新)
         async function generatePDF() {
-            const preview = document.getElementById('invoice-preview');
             const loading = document.getElementById('pdf-loading');
-            
-            // 1. ローディング画面を表示（画面全体を隠す）
+            const preview = document.getElementById('invoice-preview');
+
             loading.classList.remove('hidden');
-            
-            // 描画を待つ
-            await new Promise(resolve => setTimeout(resolve, 50));
+
+            // フォント(Noto Serif JP)の読み込み完了を待つ
+            if (document.fonts && document.fonts.ready) {
+                try { await document.fonts.ready; } catch (e) {}
+            }
+
+            // プレビューはCSSで縮小表示(transform: scale)されているので、
+            // PDF化のあいだだけ等倍に戻す
+            const origTransform = preview.style.transform;
+            preview.style.transform = 'none';
+            preview.classList.remove('shadow-lg');
+
+            // レイアウト再計算とフォント反映を待つ
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             try {
-                // 2. 現在の画面の情報を取得
                 const invNumber = document.getElementById('preview-invoiceNumber').textContent;
                 const bandName = document.getElementById('bandName').value || '未名称';
                 const safeBandName = bandName.replace(/[\\/:*?"<>|]/g, '');
-                
-                // 3. 元のプレビュー要素を「そのままコピー（クローン）」する
-                const clone = preview.cloneNode(true);
-                clone.id = 'pdf-clone-element';
-                
-                // 4. クローンを「画面の左上(0,0)」に配置し、「原寸大（縮小なし）」にする。
-                // これにより親要素のレイアウト干渉を完全に防ぐ。
-                clone.style.position = 'absolute';
-                clone.style.top = '0';
-                clone.style.left = '0';
-                clone.style.transform = 'none';
-                clone.style.width = '794px';
-                clone.style.height = '1123px';
-                clone.style.zIndex = '9998'; // ローディング画面のすぐ下
-                clone.style.backgroundColor = 'white';
-                clone.classList.remove('shadow-lg');
-                
-                // クローンを画面に追加
-                document.body.appendChild(clone);
-                
-                // 5. 元のプレビューエリアを一時的に非表示にして、画面スクロールの影響を消す
-                const originalWrapperDisplay = document.getElementById('preview-wrapper').style.display;
-                document.getElementById('preview-wrapper').style.display = 'none';
-                window.scrollTo(0, 0);
 
-                // PDF生成オプション（複雑なフック処理 onclone を削除してシンプルに）
-                const opt = {
-                    margin:       0,
-                    filename:     `請求書_${safeBandName}_${invNumber}.pdf`,
-                    image:        { type: 'jpeg', quality: 1.0 },
-                    html2canvas:  { 
-                        scale: 2, 
-                        useCORS: true, 
-                        windowWidth: 794,
-                        scrollY: 0,
-                        scrollX: 0
-                    },
-                    jsPDF: { 
-                        unit: 'px',          
-                        format: [794, 1123], 
-                        orientation: 'portrait' 
-                    }
-                };
-                
-                // 6. クローンを対象にPDF生成を実行
-                await html2pdf().set(opt).from(clone).save();
+                // 1. html2canvas で要素を画像化（A4比率 794:1123 を維持）
+                const canvas = await html2canvas(preview, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    width: 794,
+                    height: 1123,
+                    windowWidth: 794,
+                    windowHeight: 1123
+                });
 
-                // 7. 成功したらクローンを削除し、元の画面を復旧
-                document.body.removeChild(clone);
-                document.getElementById('preview-wrapper').style.display = originalWrapperDisplay;
-                
+                // 2. jsPDFでA4ページを作成し、canvasを210×297mmぴったりに貼り付け
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait',
+                    compress: true
+                });
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+                pdf.save(`請求書_${safeBandName}_${invNumber}.pdf`);
+
             } catch (err) {
                 console.error("PDF生成エラー:", err);
-                alert("PDFの生成に失敗しました。");
-                
-                // エラーが起きても必ず画面を元に戻す
-                const existingClone = document.getElementById('pdf-clone-element');
-                if (existingClone) {
-                    document.body.removeChild(existingClone);
-                }
-                document.getElementById('preview-wrapper').style.display = 'block';
-                
+                alert("PDFの生成に失敗しました。\n\n詳細: " + (err && err.message ? err.message : err));
             } finally {
-                // 8. 成功しても失敗しても、最後に必ずローディングを消す
+                preview.style.transform = origTransform;
+                preview.classList.add('shadow-lg');
                 loading.classList.add('hidden');
             }
         }
 
-        // リセット機能
         function resetForm() {
             if(confirm('入力内容を全てリセットしますか？')) {
                 document.getElementById('invoice-form').reset();
-                
-                // エラー表示をクリア
                 document.getElementById('error-message').classList.add('hidden');
+                
                 const inputs = document.querySelectorAll('.sync-input, #invoiceDate');
                 inputs.forEach(input => {
                     input.classList.remove('border-red-500', 'bg-red-50');
-                    // 手動でinputイベントを発火させ、プレビューをプレースホルダーに戻す
-                    const event = new Event('input');
-                    input.dispatchEvent(event);
+                    input.dispatchEvent(new Event('input'));
                 });
                 
-                // インボイス番号のラッパーを隠す
                 document.getElementById('preview-invoiceRegNum-wrapper').classList.add('hidden');
                 
-                // 日付と番号は再生成してセット
                 const today = new Date();
                 const yyyy = today.getFullYear();
                 const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -603,7 +536,6 @@
                 const dateInput = document.getElementById('invoiceDate');
                 dateInput.value = todayStr;
                 document.getElementById('preview-invoiceDate').textContent = todayStr.replace(/-/g, '/');
-                
                 document.getElementById('preview-invoiceNumber').textContent = generateInvoiceNumber();
             }
         }
