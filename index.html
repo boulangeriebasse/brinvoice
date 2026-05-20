@@ -31,16 +31,17 @@
             overflow: hidden;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
         }
 
         /* プレビュー本体 (A4サイズ比率の固定幅) */
         #invoice-preview {
             width: 794px; /* A4幅 (96dpi換算) */
             min-height: 1123px; /* A4高さ (96dpi換算) */
-            position: absolute;
-            transform-origin: top left;
             background-color: white;
             box-sizing: border-box;
+            transform-origin: top center;
+            flex-shrink: 0;
         }
 
         /* 印刷時用の調整 */
@@ -220,47 +221,49 @@
                         <!-- PDF出力対象要素 (A4比率) -->
                         <div id="invoice-preview" class="p-14 text-black shadow-lg serif-font">
                             
-                            <!-- ヘッダー -->
-                            <div class="flex justify-between items-start mb-16">
-                                <div class="w-1/2">
-                                    <h2 class="text-[22px] font-bold mb-6 tracking-wide">BoulangerieBASSE 松永健太 <span class="ml-1 text-lg">様</span></h2>
-                                    <p class="text-sm leading-relaxed text-gray-800">
+                            <!-- 1段目: タイトルと日付 -->
+                            <div class="flex justify-between items-end mb-16">
+                                <h1 class="text-4xl font-bold tracking-[0.4em] text-gray-800">請求書</h1>
+                                <div class="text-right">
+                                    <p class="text-sm mb-1">請求日: <span id="preview-invoiceDate" class="ml-2"></span></p>
+                                    <p class="text-xs text-gray-500">請求書番号: <span id="preview-invoiceNumber" class="ml-1"></span></p>
+                                </div>
+                            </div>
+
+                            <!-- 2段目: 請求先・金額(左) と 請求元(右) -->
+                            <div class="flex justify-between items-start mb-14">
+                                <!-- 左側: 請求先 & ご請求金額 -->
+                                <div class="w-[55%] pr-4">
+                                    <h2 class="text-xl font-bold mb-4 tracking-wide text-gray-800">BoulangerieBASSE 松永健太 <span class="ml-1 text-lg font-normal">様</span></h2>
+                                    <p class="text-sm leading-relaxed text-gray-700 mb-10">
                                         〒133-0051<br>
                                         東京都江戸川区北小岩2-9-3 山口ビル1階
                                     </p>
-                                </div>
-                                <div class="w-1/2 text-right">
-                                    <p class="text-sm mb-1">請求日: <span id="preview-invoiceDate"></span></p>
-                                    <p class="text-sm mb-8">請求書番号: <span id="preview-invoiceNumber"></span></p>
                                     
-                                    <div class="mt-4 text-base leading-relaxed">
-                                        <p class="text-[18px] font-bold mb-2 border-b border-gray-300 pb-1 inline-block min-w-[200px] min-h-[2.5rem]" id="preview-bandName"></p>
-                                        <p class="text-sm mb-1 min-h-[1.25rem] text-gray-800" id="preview-address"></p>
+                                    <p class="text-sm mb-2 text-gray-700">下記の通りご請求申し上げます。</p>
+                                    <div class="flex items-end border-b-[1.5px] border-gray-400 pb-2 mb-3">
+                                        <span class="text-lg mr-4 font-bold tracking-widest text-gray-800">ご請求金額</span>
+                                        <span class="text-3xl font-bold tracking-wider text-gray-800">￥<span id="preview-amount">0</span> -</span>
+                                        <span class="text-sm ml-2 mb-1 text-gray-600">（税込）</span>
+                                    </div>
+                                    <p class="text-sm text-gray-700">お支払い期限: <span class="ml-4">翌月末日</span></p>
+                                </div>
+                                
+                                <!-- 右側: 請求元情報 -->
+                                <div class="w-[45%] pl-4 text-right">
+                                    <p class="text-xl font-bold mb-4 min-h-[1.75rem] text-gray-800" id="preview-bandName"></p>
+                                    <div class="text-sm leading-relaxed text-gray-700">
+                                        <p class="mb-2 min-h-[1.25rem]" id="preview-address"></p>
                                         <p>担当: <span id="preview-contactName" class="ml-2"></span></p>
-                                        <p>Email: <span id="preview-email" class="ml-2"></span></p>
                                         <p>TEL: <span id="preview-phone" class="ml-2"></span></p>
-                                        <p id="preview-invoiceRegNum-wrapper" class="hidden mt-1 text-sm text-gray-700">登録番号: T<span id="preview-invoiceRegNum"></span></p>
+                                        <p>Email: <span id="preview-email" class="ml-2"></span></p>
+                                        <p id="preview-invoiceRegNum-wrapper" class="hidden mt-2 text-xs text-gray-500">登録番号: T<span id="preview-invoiceRegNum"></span></p>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- タイトル -->
-                            <div class="text-center mb-16">
-                                <h1 class="text-3xl font-bold tracking-[0.5em] border-b-[3px] border-black inline-block pb-3 px-12">請求書</h1>
-                            </div>
-
-                            <!-- 請求金額 -->
-                            <div class="mb-12">
-                                <p class="text-sm mb-2 text-gray-700">下記の通りご請求申し上げます。</p>
-                                <div class="flex items-end border-b-2 border-black pb-3">
-                                    <span class="text-lg mr-6 font-bold tracking-widest">ご請求金額</span>
-                                    <span class="text-[32px] font-bold tracking-wider">￥<span id="preview-amount">0</span> -</span>
-                                    <span class="text-sm ml-4 mb-2 text-gray-600">（税込）</span>
-                                </div>
-                            </div>
-
                             <!-- 内訳 -->
-                            <table class="w-full mb-16 border-collapse border border-gray-800 text-[15px]">
+                            <table class="w-full mb-12 border-collapse border border-gray-800 text-[15px]">
                                 <thead>
                                     <tr class="bg-gray-100">
                                         <th class="border border-gray-800 py-2.5 px-4 text-center font-bold tracking-widest w-[70%]">項　目 (内訳)</th>
@@ -299,13 +302,6 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
-                            
-                            <div class="mt-6 text-right">
-                                <p class="text-[11px] text-gray-600 leading-relaxed">
-                                    ※誠に勝手ながら、振込手数料は貴社にてご負担賜りますようお願い申し上げます。<br>
-                                    ※お支払いは翌月末日までにお願いいたします。
-                                </p>
                             </div>
 
                         </div>
@@ -379,7 +375,7 @@
             preview.style.transform = `scale(${scale})`;
             
             // 親要素の高さをスケール後のプレビューの高さに合わせる
-            const scaledHeight = preview.clientHeight * scale;
+            const scaledHeight = preview.offsetHeight * scale;
             wrapper.style.height = `${scaledHeight + 32}px`;
         }
 
@@ -482,11 +478,18 @@
 
         // PDFの生成処理
         function generatePDF() {
-            const preview = document.getElementById('invoice-preview');
+            const originalPreview = document.getElementById('invoice-preview');
             
-            // 保存前にスケールをリセット (html2pdfが正確にキャプチャできるように)
-            const originalTransform = preview.style.transform;
-            preview.style.transform = 'none';
+            // PDFキャプチャの不具合（真っ白になる等）を防ぐため、クローンを作成して画面外で処理する
+            const clone = originalPreview.cloneNode(true);
+            
+            // クローンを画面外に配置し、スケールや影をリセット
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+            clone.style.top = '0';
+            clone.style.transform = 'none';
+            clone.classList.remove('shadow-lg');
+            document.body.appendChild(clone);
             
             const invNumber = document.getElementById('preview-invoiceNumber').textContent;
             const bandName = document.getElementById('bandName').value || '未名称';
@@ -496,28 +499,26 @@
             const opt = {
                 margin:       0,
                 filename:     `請求書_${safeBandName}_${invNumber}.pdf`,
-                image:        { type: 'jpeg', quality: 1.0 },
+                image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    windowWidth: 794 // キャプチャ時のウィンドウ幅を固定
+                    scrollY: 0 // スクロール位置によるキャプチャズレを防止
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
             
-            // PDF出力時に影などのスタイルを一時的に削除
-            preview.classList.remove('shadow-lg');
-            
-            // ボタンをローディング状態にする等のUX向上も可能ですが、今回はシンプルに
-            html2pdf().set(opt).from(preview).save().then(() => {
-                // スケールとスタイルを元に戻す
-                preview.style.transform = originalTransform;
-                preview.classList.add('shadow-lg');
+            // クローン要素からPDFを生成
+            html2pdf().set(opt).from(clone).save().then(() => {
+                // 完了後にクローンを削除
+                document.body.removeChild(clone);
             }).catch(err => {
                 console.error("PDF生成エラー:", err);
                 alert("PDFの生成に失敗しました。");
-                preview.style.transform = originalTransform;
-                preview.classList.add('shadow-lg');
+                // エラー時もクローンを削除
+                if (document.body.contains(clone)) {
+                    document.body.removeChild(clone);
+                }
             });
         }
 
