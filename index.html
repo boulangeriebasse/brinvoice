@@ -37,7 +37,9 @@
         /* プレビュー本体 (A4サイズ比率の固定幅) */
         #invoice-preview {
             width: 794px; /* A4幅 (96dpi換算) */
-            min-height: 1123px; /* A4高さ (96dpi換算) */
+            height: 1123px; /* A4高さ (固定に変更し2ページ目を防ぐ) */
+            max-height: 1123px;
+            overflow: hidden; /* はみ出しを完全にカット */
             background-color: white;
             box-sizing: border-box;
             transform-origin: top center;
@@ -478,8 +480,17 @@
 
         // PDFの生成処理
         function generatePDF() {
+            const wrapper = document.getElementById('preview-wrapper');
             const preview = document.getElementById('invoice-preview');
             
+            // ★ PDF生成前に、一時的にスケールを原寸大（100%）に戻す
+            const originalTransform = preview.style.transform;
+            const originalWrapperHeight = wrapper.style.height;
+            
+            preview.style.transform = 'none';
+            wrapper.style.height = '1123px';
+            preview.classList.remove('shadow-lg'); // 影も消す
+
             const invNumber = document.getElementById('preview-invoiceNumber').textContent;
             const bandName = document.getElementById('bandName').value || '未名称';
             // ファイル名から不要な文字を除外
@@ -488,32 +499,36 @@
             const opt = {
                 margin:       0,
                 filename:     `請求書_${safeBandName}_${invNumber}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
+                image:        { type: 'jpeg', quality: 1.0 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    scrollY: 0, // スクロール位置によるズレを防止
-                    windowWidth: 794, // A4幅を明示
-                    // PDF生成の裏側で作成されるクローン要素に対する処理（画面のチラつきなし）
-                    onclone: function(clonedDoc) {
-                        const el = clonedDoc.getElementById('invoice-preview');
-                        if (el) {
-                            // スケールや影を解除して原寸大でキャプチャさせる
-                            el.style.transform = 'none';
-                            el.style.width = '794px';
-                            el.style.minHeight = '1123px';
-                            el.classList.remove('shadow-lg');
-                        }
-                    }
+                    scrollY: 0, 
+                    windowWidth: 794 // 幅を強制固定してレイアウト崩れを防ぐ
                 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { 
+                    unit: 'px',          // 単位をピクセルに
+                    format: [794, 1123], // A4の実サイズに完全固定（2ページ目を防ぐ）
+                    orientation: 'portrait' 
+                }
             };
             
-            // プレビュー要素から直接PDFを生成
-            html2pdf().set(opt).from(preview).save().catch(err => {
-                console.error("PDF生成エラー:", err);
-                alert("PDFの生成に失敗しました。");
-            });
+            // ★ スタイルの変更がブラウザに反映されるのを一瞬だけ待ってからPDF化
+            setTimeout(() => {
+                html2pdf().set(opt).from(preview).save().then(() => {
+                    // 完了後に元のスケール状態に戻す
+                    preview.style.transform = originalTransform;
+                    wrapper.style.height = originalWrapperHeight;
+                    preview.classList.add('shadow-lg');
+                }).catch(err => {
+                    console.error("PDF生成エラー:", err);
+                    alert("PDFの生成に失敗しました。");
+                    // エラー時も元に戻す
+                    preview.style.transform = originalTransform;
+                    wrapper.style.height = originalWrapperHeight;
+                    preview.classList.add('shadow-lg');
+                });
+            }, 100);
         }
 
         // リセット機能
